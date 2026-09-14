@@ -1,9 +1,4 @@
 -- Velocity Growth portal: migration 01, database and membership foundation.
--- Target: the NEW Supabase project assoltaoxnkcfaujibma.
--- Run the whole file once in Supabase SQL Editor as postgres.
--- Atomic: an error rolls back the migration. Do not rerun after success.
--- Does not create auth accounts, passwords, OAuth settings, send RPCs or workers.
--- Only the two confirmed emails are provisioned. Add the other four later.
 BEGIN;
 
 CREATE SCHEMA vg_private;
