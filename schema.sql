@@ -39,9 +39,9 @@ CREATE TABLE vg_private.approved_accounts (
   UNIQUE (brand_id,role)
 );
 INSERT INTO vg_private.approved_accounts (email,brand_id,role)
- SELECT 'karoo.owner@gmail.com',id,'owner' FROM public.brands WHERE code='KAROO';
+ SELECT 'ahmedesmail34180@gmail.com',id,'owner' FROM public.brands WHERE code='KAROO';
 INSERT INTO vg_private.approved_accounts (email,brand_id,role)
- SELECT 'kilele.analyst@gmail.com',id,'analyst' FROM public.brands WHERE code='KILELE';
+ SELECT 'ahmedesmailofficial01@gmail.com',id,'analyst' FROM public.brands WHERE code='KILELE';
 
 CREATE TABLE public.brand_memberships (
   user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
