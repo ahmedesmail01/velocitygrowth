@@ -1,0 +1,10 @@
+# Append to the repository-root .gitignore; do not replace your existing rules.
+**/node_modules/
+**/.next/
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.worker.example
+**/*.tsbuildinfo
+**/*.pem
+**/*.key
