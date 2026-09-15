@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "@electric-sql/pglite": "0.5.8",
+    "adm-zip": "0.6.1",
+    "csv-parse": "7.0.2",
+    "libphonenumber-js": "1.13.13",
+    "luxon": "3.7.2",
+    "pg": "8.23.0"
+  },
+  "name": "velocity-growth-importer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "import": "node --env-file=.env run-import.mjs",
+    "test": "node test-import.mjs"
+  }
+}
