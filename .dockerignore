@@ -1,0 +1,12 @@
+**/node_modules
+**/.next
+**/.git
+**/.env
+**/.env.*
+**/*.log
+**/*.tsbuildinfo
+**/*.pem
+**/*.key
+data_seeders
+db_scripts
+task
