@@ -5,7 +5,9 @@ import {
   RefreshCw,
   ChevronLeft,
   ChevronRight,
+  Inbox,
 } from "lucide-react";
+
 export function useLoad<T>(load: () => Promise<T>) {
   const [data, setData] = useState<T | null>(null),
     [error, setError] = useState(""),
@@ -36,6 +38,7 @@ export function useLoad<T>(load: () => Promise<T>) {
   }, [load, version]);
   return { data, error, busy, refresh };
 }
+
 export function PageTitle({
   eyebrow,
   title,
@@ -58,14 +61,16 @@ export function PageTitle({
     </div>
   );
 }
+
 export function Refresh({ onClick }: { onClick: () => void }) {
   return (
-    <button className="button secondary" onClick={onClick}>
-      <RefreshCw size={16} />
+    <button className="button secondary" onClick={onClick} title="Refresh data">
+      <RefreshCw size={15} />
       Refresh
     </button>
   );
 }
+
 export function State({
   busy,
   error,
@@ -81,26 +86,67 @@ export function State({
     return (
       <div className="state" role="status">
         <div className="spinner" />
-        Loading your data…
+        <span style={{ fontSize: "13.5px", fontWeight: 500, color: "var(--muted)" }}>
+          Loading your data…
+        </span>
       </div>
     );
   if (error)
     return (
       <div className="state" role="alert">
-        <AlertCircle />
-        <p>{error}</p>
-        <button onClick={retry}>Try again</button>
+        <div
+          style={{
+            background: "#fef2f2",
+            border: "1px solid #fecaca",
+            borderRadius: "var(--radius)",
+            padding: "24px 28px",
+            maxWidth: "440px",
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "12px",
+            boxShadow: "var(--shadow-sm)",
+          }}
+        >
+          <AlertCircle size={28} style={{ color: "#dc2626" }} />
+          <p style={{ color: "#991b1b", fontWeight: 500, margin: 0, textAlign: "center" }}>
+            {error}
+          </p>
+          <button className="button secondary" onClick={retry} style={{ marginTop: "4px" }}>
+            Try again
+          </button>
+        </div>
       </div>
     );
   if (empty)
     return (
       <div className="state">
-        <h3>No matching records</h3>
-        <p>Try a different search or filter.</p>
+        <div
+          style={{
+            background: "var(--surface)",
+            border: "1px dashed var(--line)",
+            borderRadius: "var(--radius)",
+            padding: "36px 28px",
+            maxWidth: "440px",
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          <Inbox size={32} style={{ color: "var(--muted-light)", marginBottom: "4px" }} />
+          <h3 style={{ margin: 0, color: "var(--ink)" }}>No matching records</h3>
+          <p style={{ margin: 0, fontSize: "13.5px", color: "var(--muted)" }}>
+            Try a different search or filter.
+          </p>
+        </div>
       </div>
     );
   return null;
 }
+
 export function Pager({
   page,
   hasMore,
@@ -118,7 +164,7 @@ export function Pager({
         disabled={page === 0}
         onClick={() => onChange(page - 1)}
       >
-        <ChevronLeft size={17} />
+        <ChevronLeft size={16} />
         Previous
       </button>
       <button
@@ -127,11 +173,12 @@ export function Pager({
         onClick={() => onChange(page + 1)}
       >
         Next
-        <ChevronRight size={17} />
+        <ChevronRight size={16} />
       </button>
     </div>
   );
 }
+
 export function Badge({
   children,
   tone = "neutral",

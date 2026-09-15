@@ -10,6 +10,8 @@ import {
   useLoad,
 } from "@/components/ui";
 import { num } from "@/lib/types";
+import { FileSpreadsheet, AlertTriangle, AlertCircle, Info, FileText } from "lucide-react";
+
 type Run = {
   id: string;
   filename: string;
@@ -21,6 +23,7 @@ type Run = {
   warning_rows: number;
   safe_error: string | null;
 };
+
 type Issue = {
   id: string;
   import_id: string;
@@ -29,10 +32,12 @@ type Issue = {
   severity: string;
   safe_message: string;
 };
+
 export default function Imports() {
   const [run, setRun] = useState(""),
     [severity, setSeverity] = useState(""),
     [page, setPage] = useState(0);
+
   const loadRuns = useCallback(async () => {
     const { data, error } = await db()
       .from("import_runs")
@@ -45,6 +50,7 @@ export default function Imports() {
     return data as Run[];
   }, []);
   const reports = useLoad(loadRuns);
+
   const loadIssues = useCallback(async () => {
     let q = db()
       .from("import_issues")
@@ -52,6 +58,7 @@ export default function Imports() {
       .order("row_number")
       .order("id")
       .range(page * 50, page * 50 + 50);
+
     if (run) q = q.eq("import_id", run);
     if (severity) q = q.eq("severity", severity);
     const { data, error } = await q;
@@ -59,12 +66,13 @@ export default function Imports() {
     return { rows: (data as Issue[]).slice(0, 50), more: data.length > 50 };
   }, [run, severity, page]);
   const issues = useLoad(loadIssues);
+
   return (
     <>
       <PageTitle
-        eyebrow="DATA QUALITY"
+        eyebrow="DATA QUALITY & INGESTION"
         title="Import reports"
-        description="See exactly what was accepted, deduplicated, or excluded."
+        description="Review ingested files, deduplication counts, and data validation reports."
         action={
           <Refresh
             onClick={() => {
@@ -74,11 +82,13 @@ export default function Imports() {
           />
         }
       />
+
       <State
         busy={reports.busy}
         error={reports.error}
         retry={reports.refresh}
       />
+
       {reports.data && (
         <section className="panel table-panel">
           <div className="table-scroll">
@@ -98,16 +108,25 @@ export default function Imports() {
                 {reports.data.map((r) => (
                   <tr key={r.id}>
                     <td>
-                      <button
-                        className="file-link"
-                        onClick={() => {
-                          setRun(r.id);
-                          setPage(0);
-                        }}
-                      >
-                        {r.filename}
-                      </button>
-                      {r.safe_error && <small>{r.safe_error}</small>}
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                        <FileSpreadsheet size={16} style={{ color: "var(--brand-green)", marginTop: "2px", flexShrink: 0 }} />
+                        <div>
+                          <button
+                            className="file-link"
+                            onClick={() => {
+                              setRun(r.id);
+                              setPage(0);
+                            }}
+                          >
+                            {r.filename}
+                          </button>
+                          {r.safe_error && (
+                            <small style={{ color: "#ef4444", display: "block", marginTop: "2px" }}>
+                              {r.safe_error}
+                            </small>
+                          )}
+                        </div>
+                      </div>
                     </td>
                     <td>
                       <Badge
@@ -129,7 +148,11 @@ export default function Imports() {
                       r.duplicate_rows,
                       r.warning_rows,
                     ].map((n, i) => (
-                      <td key={i}>{num(n)}</td>
+                      <td key={i}>
+                        <span style={{ fontFamily: "var(--font-mono)", fontWeight: i === 1 ? 600 : 400, color: i === 2 && n > 0 ? "#dc2626" : i === 4 && n > 0 ? "#d97706" : "inherit" }}>
+                          {num(n)}
+                        </span>
+                      </td>
                     ))}
                   </tr>
                 ))}
@@ -141,19 +164,30 @@ export default function Imports() {
           )}
         </section>
       )}
+
       <div className="method-note">
-        <strong>Reading this report</strong>
-        <p>
-          Total = accepted + rejected + duplicates. Warning rows are retained
-          and may have more than one issue. Accepted rows can update an existing
-          customer. An error on a record does not mean the entire import failed.
-        </p>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+          <Info size={18} style={{ color: "var(--brand-green)", flexShrink: 0, marginTop: "2px" }} />
+          <div>
+            <strong>Reading this report</strong>
+            <p>
+              Total = accepted + rejected + duplicates. Warning rows are retained
+              and may have more than one issue. Accepted rows can update an existing
+              customer. An error on a record does not mean the entire import failed.
+            </p>
+          </div>
+        </div>
       </div>
+
       <section className="panel table-panel section-gap">
         <div className="toolbar">
-          <h2>Row-level issues</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginRight: "auto" }}>
+            <FileText size={18} style={{ color: "var(--brand-green)" }} />
+            <h2 style={{ margin: 0 }}>Row-level validation issues</h2>
+          </div>
+
           <label className="filter-label">
-            File
+            <span>Filter file</span>
             <select
               aria-label="Filter issues by file"
               value={run}
@@ -170,8 +204,9 @@ export default function Imports() {
               ))}
             </select>
           </label>
+
           <label className="filter-label">
-            Severity
+            <span>Severity</span>
             <select
               value={severity}
               onChange={(e) => {
@@ -185,12 +220,14 @@ export default function Imports() {
             </select>
           </label>
         </div>
+
         <State
           busy={issues.busy}
           error={issues.error}
           retry={issues.refresh}
           empty={!!issues.data && !issues.data.rows.length}
         />
+
         {issues.data && issues.data.rows.length > 0 && (
           <>
             <div className="table-scroll">
@@ -200,20 +237,31 @@ export default function Imports() {
                     <th>Source file</th>
                     <th>Line</th>
                     <th>Severity</th>
-                    <th>Issue</th>
-                    <th>Explanation</th>
+                    <th>Issue code</th>
+                    <th>Safe explanation</th>
                   </tr>
                 </thead>
                 <tbody>
                   {issues.data.rows.map((i) => (
                     <tr key={i.id}>
                       <td>
-                        {reports.data?.find((r) => r.id === i.import_id)
-                          ?.filename ?? "Source unavailable"}
+                        <span style={{ fontWeight: 500, color: "var(--ink)" }}>
+                          {reports.data?.find((r) => r.id === i.import_id)
+                            ?.filename ?? "Source unavailable"}
+                        </span>
                       </td>
-                      <td>{num(i.row_number)}</td>
+                      <td>
+                        <span style={{ fontFamily: "var(--font-mono)" }}>
+                          #{num(i.row_number)}
+                        </span>
+                      </td>
                       <td>
                         <Badge tone={i.severity === "error" ? "red" : "amber"}>
+                          {i.severity === "error" ? (
+                            <AlertCircle size={12} />
+                          ) : (
+                            <AlertTriangle size={12} />
+                          )}
                           {i.severity}
                         </Badge>
                       </td>
@@ -228,9 +276,10 @@ export default function Imports() {
           </>
         )}
       </section>
+
       <p className="footnote">
-        Line references point to the ending line of each CSV record. Only safe
-        issue descriptions appear here.
+        Line references point to the ending line of each CSV record. Only safe,
+        sanitized issue descriptions appear here.
       </p>
     </>
   );

@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useState, useEffect } from "react";
-import { Search, Mail, Smartphone } from "lucide-react";
+import { Search, Mail, Smartphone, Globe, Calendar, User, X } from "lucide-react";
 import { db } from "@/lib/supabase";
 import { useAccess } from "@/components/auth";
 import {
@@ -12,6 +12,7 @@ import {
   useLoad,
 } from "@/components/ui";
 import { date } from "@/lib/types";
+
 type Contact = {
   id: string;
   external_id: string;
@@ -24,12 +25,14 @@ type Contact = {
   signup_at: string | null;
   signup_precision: string;
 };
+
 export default function Contacts() {
   const { brand } = useAccess();
   const [search, setSearch] = useState(""),
     [query, setQuery] = useState(""),
     [status, setStatus] = useState(""),
     [page, setPage] = useState(0);
+
   useEffect(() => {
     const t = setTimeout(() => {
       setPage(0);
@@ -37,6 +40,7 @@ export default function Contacts() {
     }, 300);
     return () => clearTimeout(t);
   }, [search]);
+
   const load = useCallback(async () => {
     let request = db()
       .from("contacts")
@@ -47,11 +51,13 @@ export default function Contacts() {
       .order("full_name")
       .order("id")
       .range(page * 50, page * 50 + 50);
+
     if (status) request = request.eq("status", status);
     if (query)
       request = request.or(
         `full_name.ilike.%${query}%,email.ilike.%${query}%,external_id.ilike.%${query}%`,
       );
+
     const { data, error } = await request;
     if (error) throw error;
     const rows = (data ?? []) as Contact[];
@@ -60,6 +66,7 @@ export default function Contacts() {
       string,
       { email_contactable: boolean; sms_contactable: boolean }
     > = {};
+
     if (ids.length) {
       const { data: e, error } = await db()
         .from("contact_eligibility")
@@ -68,31 +75,46 @@ export default function Contacts() {
       if (error) throw error;
       for (const r of e ?? []) eligible[r.id] = r;
     }
+
     return { rows: rows.slice(0, 50), more: rows.length > 50, eligible };
   }, [page, query, status]);
+
   const { data, busy, error, refresh } = useLoad(load);
+
   return (
     <>
       <PageTitle
-        eyebrow="AUDIENCE"
+        eyebrow="AUDIENCE & CRM"
         title="Your contacts"
-        description="Explore your customers and their current channel eligibility."
+        description="Explore your customer base and their live channel eligibility."
         action={<Refresh onClick={refresh} />}
       />
+
       <section className="panel table-panel">
         <div className="toolbar">
           <label className="search">
-            <Search size={18} />
+            <Search size={16} />
             <input
               aria-label="Search contacts"
-              placeholder="Search name, email or customer ID"
+              placeholder="Search name, email, or customer ID…"
               value={search}
               maxLength={80}
               onChange={(e) => setSearch(e.target.value)}
             />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                style={{ background: "none", border: "none", padding: 0, boxShadow: "none", color: "var(--muted)" }}
+                aria-label="Clear search"
+              >
+                <X size={15} />
+              </button>
+            )}
           </label>
+
           <label className="filter-label">
-            Status
+            <span>Status</span>
             <select
               value={status}
               onChange={(e) => {
@@ -102,17 +124,21 @@ export default function Contacts() {
             >
               <option value="">All statuses</option>
               {["active", "pending", "bounced", "unsubscribed"].map((x) => (
-                <option key={x}>{x}</option>
+                <option key={x} value={x}>
+                  {x.charAt(0).toUpperCase() + x.slice(1)}
+                </option>
               ))}
             </select>
           </label>
         </div>
+
         <State
           busy={busy}
           error={error}
           retry={refresh}
           empty={!!data && !data.rows.length}
         />
+
         {data && data.rows.length > 0 && (
           <>
             <div className="table-scroll">
@@ -131,17 +157,56 @@ export default function Contacts() {
                   {data.rows.map((c) => (
                     <tr key={c.id}>
                       <td>
-                        <strong>{c.full_name}</strong>
-                        <small>{c.external_id}</small>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <span
+                            className="avatar"
+                            style={{
+                              width: "30px",
+                              height: "30px",
+                              fontSize: "11px",
+                              borderRadius: "6px",
+                              background: "var(--surface-subtle)",
+                              color: "var(--ink)",
+                              border: "1px solid var(--line)",
+                            }}
+                          >
+                            <User size={14} style={{ color: "var(--muted)" }} />
+                          </span>
+                          <div>
+                            <strong>{c.full_name}</strong>
+                            <small className="code-cell">{c.external_id}</small>
+                          </div>
+                        </div>
                       </td>
                       <td>
-                        <span>{c.email ?? "No valid email"}</span>
-                        <small>{c.phone ?? "No valid phone"}</small>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                          <span style={{ color: c.email ? "var(--ink)" : "var(--muted-light)" }}>
+                            {c.email ?? "No email"}
+                          </span>
+                          {c.phone && (
+                            <small style={{ color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
+                              {c.phone}
+                            </small>
+                          )}
+                        </div>
                       </td>
-                      <td>{c.country ?? "Unknown"}</td>
+                      <td>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: "var(--ink-secondary)" }}>
+                          <Globe size={13} style={{ color: "var(--muted)" }} />
+                          {c.country ?? "Unknown"}
+                        </span>
+                      </td>
                       <td>
                         <Badge
-                          tone={c.status === "active" ? "green" : "neutral"}
+                          tone={
+                            c.status === "active"
+                              ? "green"
+                              : c.status === "pending"
+                                ? "amber"
+                                : c.status === "bounced"
+                                  ? "red"
+                                  : "neutral"
+                          }
                         >
                           {c.status}
                         </Badge>
@@ -150,26 +215,31 @@ export default function Contacts() {
                         <div className="channel-icons">
                           {data.eligible[c.id]?.email_contactable && (
                             <Badge tone="green">
-                              <Mail size={13} />
+                              <Mail size={12} />
                               Email
                             </Badge>
                           )}
                           {data.eligible[c.id]?.sms_contactable && (
                             <Badge tone="green">
-                              <Smartphone size={13} />
+                              <Smartphone size={12} />
                               SMS
                             </Badge>
                           )}
                           {!data.eligible[c.id]?.email_contactable &&
                             !data.eligible[c.id]?.sms_contactable && (
-                              <span className="muted">None</span>
+                              <span className="muted" style={{ fontSize: "12px" }}>None</span>
                             )}
                         </div>
                       </td>
                       <td>
-                        {date(c.signup_at, brand.timezone)}
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px" }}>
+                          <Calendar size={13} style={{ color: "var(--muted-light)" }} />
+                          <span>{date(c.signup_at, brand.timezone)}</span>
+                        </div>
                         {c.signup_precision === "date" && (
-                          <small>Date only</small>
+                          <small style={{ color: "var(--muted-light)", display: "block" }}>
+                            Date only
+                          </small>
                         )}
                       </td>
                     </tr>
@@ -181,9 +251,11 @@ export default function Contacts() {
           </>
         )}
       </section>
+
       <p className="footnote">
         50 customers per page. Deleted customers are excluded. “Active” status
-        alone does not mean a customer is contactable.
+        alone does not guarantee message deliverability (consent and suppression
+        filters also apply).
       </p>
     </>
   );
