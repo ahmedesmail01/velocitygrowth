@@ -197,48 +197,52 @@ export default function Campaigns() {
                 className="campaign-card"
                 onClick={() => setSelected(c.id)}
               >
-                <div className="campaign-card-top">
-                  <span className="icon-tile">
-                    {c.channel === "email" ? (
-                      <Mail size={18} />
-                    ) : (
-                      <Smartphone size={18} />
-                    )}
-                  </span>
-                  <Badge tone={c.channel === "email" ? "green" : "neutral"}>
-                    {c.channel.toUpperCase()}
-                  </Badge>
+                <div className="campaign-card-header">
+                  <div className="campaign-channel-tag">
+                    <span className={`channel-icon-box ${c.channel}`}>
+                      {c.channel === "email" ? (
+                        <Mail size={15} />
+                      ) : (
+                        <Smartphone size={15} />
+                      )}
+                    </span>
+                    <Badge tone={c.channel === "email" ? "green" : "neutral"}>
+                      {c.channel.toUpperCase()}
+                    </Badge>
+                  </div>
+                  <span className="campaign-id-pill">{c.external_id}</span>
                 </div>
 
-                <small>{c.external_id}</small>
-                <h2>{c.name}</h2>
+                <h2 className="campaign-card-title">{c.name}</h2>
 
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "8px", fontSize: "12px", color: "var(--muted)" }}>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                <div className="campaign-card-meta">
+                  <span className="meta-item">
                     <Calendar size={13} />
                     {date(c.sent_at, brand.timezone)}
                   </span>
-                  <span>·</span>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                  <span className="meta-dot">·</span>
+                  <span className="meta-item">
                     <Globe size={13} />
                     {c.target_country ?? "All countries"}
                   </span>
                 </div>
 
-                <div className="campaign-numbers">
-                  <div>
-                    <span>Reported sent</span>
-                    <strong>{num(c.reported_sent)}</strong>
+                <div className="campaign-metrics-shelf">
+                  <div className="metric-box">
+                    <span className="metric-label">Reported sent</span>
+                    <strong className="metric-value">{num(c.reported_sent)}</strong>
                   </div>
-                  <div>
-                    <span>Reported delivered</span>
-                    <strong>{num(c.reported_delivered)}</strong>
+                  <div className="metric-box delivered">
+                    <span className="metric-label">Reported delivered</span>
+                    <strong className="metric-value">{num(c.reported_delivered)}</strong>
                   </div>
                 </div>
 
-                <div className="card-action">
-                  <span>View performance</span>
-                  <ArrowUpRight size={17} />
+                <div className="campaign-card-footer">
+                  <span className="footer-label">View performance</span>
+                  <span className="footer-arrow">
+                    <ArrowUpRight size={15} />
+                  </span>
                 </div>
               </button>
             ))}
